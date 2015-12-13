@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Testing AJAX &amp; OAuth2</title>
+  <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,300,300italic,400italic,600,600italic' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href='style.css'>
+</head>
+<body>
+  <header><h2><a href="/">Deadman Mode Trading Post</a></h2></header>
+  <div class="wrapper">
+    <button id="globalSubmit"><i class='fa fa-search fa-2x'></i></button>
+    <div style='overflow:hidden;'><input type='text' id='globalSearch' placeholder='Search'></div>
+
+    <div class='content'>
+      <table id='tradingPost'>
+        <tr class="tradingOffers"><th colspan="3">Recent Offers</th></tr>
+        <tr class="tradingTitles">
+          <th colspan="1">Item</th>
+          <th colspan="1">Offer</th>
+          <th colspan="1">Name</th>
+        </tr>
+      </table>
+      <button id="login" class='pre-auth'>LOGIN</button>
+    </div>
+  </div> <!-- .wrapper -->
+
+  <script src='https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/hellojs/1.9.8/hello.all.min.js'></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-sheetrock/1.0.0/dist/sheetrock.min.js"></script>
+  <script src='jquery.easy-autocomplete.min.js'></script>
+  <script src='main.js'></script>
+  <script>
+    $(function(){
+      var baseurl = 'https://jsonp.afeld.me/?callback=?&url=http://services.runescape.com/m=itemdb_oldschool';
+      var searchOps = {
+        url: 'items.json',
+        getValue: 'name',
+        list: {
+          onLoadEvent: function() {
+            // Loop thru number of results
+            for (var i=0; i<5; i++){
+              var id = $('#globalSearch').getItemData(i).id;
+              // Add its unique id to the data attribute
+              $('.eac-item:eq('+i+')').attr('data-id', id);
+            }
+            // Add the icon to the search results
+            $('.eac-item[data-id]').each(function(){
+              var dataid = $(this).attr('data-id');
+              $.getJSON(baseurl + '/api/catalogue/detail.json?item=' + dataid, function(data){
+                var itemid = data.item.id;
+                var icon = data.item.icon;
+                var eacitem = $('.eac-item[data-id="'+itemid+'"]');
+                if (eacitem.children('img').length == 0 && itemid && icon) {
+                  $('.eac-item[data-id="'+itemid+'"]').prepend('<img src="'+icon+'">');
+                }
+              });
+            });
+          },
+          onChooseEvent: function() {
+            var dataid = $('.selected').children('.eac-item').attr('data-id');
+            window.location.hash = dataid;
+            $.getJSON(baseurl + '/api/catalogue/detail.json?item=' + dataid, function(data){
+              var itemid = data.item.id;
+              var icon = data.item.icon_large;
+              var name = data.item.name;
+              var desc = data.item.description;
+              var price = data.item.current.price;
+              $('.content').html(
+                '<h2>'+name+'</h2>'+
+                '<img src="'+icon+'">'+
+                '<p class="">'+desc+'</p>'+
+                '<div class="price">Oldschool price: '+price+'gp</div>'+
+                '<div class="addOffer"></div>'
+              );
+              $('.addOffer').load('itempage.html');
+            });
+          },
+          match: {
+            enabled: true
+          },
+          maxNumberOfElements: 5,
+        },
+        requestDelay: 1000
+      }
+
+      $('#globalSearch').easyAutocomplete(searchOps);
+
+      if (window.location.hash) {
+        var dataid = window.location.hash.substr(1);
+        $.getJSON(baseurl + '/api/catalogue/detail.json?item=' + dataid, function(data){
+          var itemid = data.item.id;
+          var icon = data.item.icon_large;
+          var name = data.item.name;
+          var desc = data.item.description;
+          var price = data.item.current.price;
+          $('.content').html(
+            '<h2>'+name+'</h2>'+
+            '<img src="'+icon+'">'+
+            // '<p class="">'+desc+'</p>'+
+            // '<div class="price">Oldschool price: '+price+'gp</div>'+
+            '<div class="addOffer"></div>'
+          );
+          $('.addOffer').load('itempage.html');
+        });
+      }
+
+
+
+      $(function(){ // Create initial list
+        $.ajax({
+          url: 'https://spreadsheets.google.com/feeds/list/1k81G2L3naGWvAI0M_PJCDaA1tOLOZ99sz4GbnYaYk6Q/od6/public/basic?hl=en_US&alt=json',
+          success: function(data){
+            var rows = data.feed.entry;
+            var end = rows.length;
+            var start = end-9;
+
+            $.each(data.feed.entry.slice(start, end), function(k, v){ // Everything
+              var id = v.title.$t; // Column 1
+              var content = v.content.$t.split(','); // Columns 2+ (array)
+              var item = v.content.$t.split('item: ').pop().toString().split(', ')[0].toString(); // just the item
+              var name = v.content.$t.split('user: ').pop().toString().split(', ')[0].toString(); // just the item
+              var offer = v.content.$t.split('offer: ').pop().toString().split(', ')[0].toString(); // just the item
+              if (offer == 'checked')
+                offer = '<span style="color: red;">Buying</span>';
+              else {
+                offer = '<span style="color: green;">Selling</span>';
+              }
+              $('#tradingPost').append('<tr><td>'+item+'</td><td>'+offer+'</td><td>'+name+'</td></tr>');
+            });
+          }
+        });
+      });
+
+    }); // page load
+  </script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+<form id="form" action="https://script.google.com/macros/s/AKfycbyaxFIYkoAY6wmJR4QsrOPgMHRHDjiNO3sm9l7Ajcl71gfSgKo/exec" method="post" target="hidden_iframe">
+  <input id="token" type="text" name="ID" hidden readonly="readonly">
+  <input type="text" name="Status" value="Pending" hidden readonly="readonly">
+  <input type="text" id="item" name="Item" hidden readonly="readonly" required="required">
+  <input id="buysell" type="checkbox" value="checked" name="Offer">
+  <label for="buysell"><span id="sell">BUY</span><span id="buy">SELL</span></label>
+  <input type="text" id="price" name="Price" placeholder="Price" required="required">
+  <label for="name" id="setName">Change Name</label>
+  <input type="text" id="name" name="User" placeholder="User" required="required">
+  <input type="text" id="unique" name="Unique" hidden readonly="readonly">
+  <button id="submit" type="submit">GO</button>
+</form>
+
+<div class='content'>
+  <div id='tradingPost'></div>
+  <button id="login" class='pre-auth'>LOGIN</button>
+</div>
+
+<!-- <table id="statistics" class="table table-condensed table-striped"></table> -->
+
+<script src='main.js'></script>
+<script>
+$(function(){
+  var uniq = Math.round(new Date().getTime() + (Math.random() * 100));
+  $('#unique').val(uniq);
+});
+</script>
